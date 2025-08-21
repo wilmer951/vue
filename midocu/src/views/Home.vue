@@ -14,20 +14,27 @@
   <div>
     <HelloWorld />
   </div>
+
+
+    <div>
+    <CategoriaForm />
+  </div>
 </template>
 
 
 
 
 <script>
-import Categorias from '@/components/Categorias.vue';
-import HelloWorld from '@/components//HelloWorld.vue';
+import Categorias from '@/components/Categorias/Categorias.vue';
+import HelloWorld from '@/components/Categorias/HelloWorld.vue';
+import CategoriaForm from '@/components/Categorias/CategoriaForm.vue';
 
 export default {
   name: "Home",
   components: {
     Categorias,
-    HelloWorld
+    HelloWorld,
+    CategoriaForm
   }
 };
 </script>

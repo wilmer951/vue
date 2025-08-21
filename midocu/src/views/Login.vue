@@ -42,53 +42,65 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: "Login",
-  data() {
-    return {
-      user: '',
-      password: '',
-      errorMsg: '',
-      successMsg: '',
-      loading: false
-    };
-  },
-  methods: {
-    async login() {
-      this.errorMsg = '';
-      this.successMsg = '';
-      this.loading = true;
+<script setup>
+import { ref } from 'vue';
+import { useRouter } from 'vue-router'; // 1. Importar la función useRouter
 
-      try {
-        const res = await fetch('/api/php/base_login_crud/mydocu/Vista/ajax/ajax_login.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            nameUserLogin: this.user,
-            namePasswordLogin: this.password
-          })
-        });
+const user = ref('');
+const password = ref('');
+const loading = ref(false);
+const errorMsg = ref('');
+const successMsg = ref('');
 
-        const data = await res.json();
+const router = useRouter(); // 2. Obtener la instancia del enrutador aquí
 
-        if (data.estado) {
-          localStorage.setItem('jwt_token', data.token);
-          this.successMsg = 'Login exitoso!';
-          this.errorMsg = '';
-            this.$router.push('/home');
-          // Aquí puedes hacer una redirección o cargar datos del usuario
-        } else {
-          this.errorMsg = data.mensaje || 'Usuario o contraseña incorrectos';
-          this.successMsg = '';
-        }
-      } catch (error) {
-        this.errorMsg = 'Error en la conexión con el servidor.';
-        this.successMsg = '';
-      } finally {
-        this.loading = false;
-      }
+const login = async () => {
+  errorMsg.value = '';
+  successMsg.value = '';
+  loading.value = true;
+
+  if (!user.value || !password.value) {
+    errorMsg.value = 'Por favor, ingresa tu usuario y contraseña.';
+    loading.value = false;
+    return;
+  }
+  
+  const datosParaEnviar = new URLSearchParams();
+  datosParaEnviar.append('nameUserLogin', user.value);
+  datosParaEnviar.append('namePasswordLogin', password.value);
+
+  try {
+    const response = await fetch('/api/api_login.php', {
+      method: 'POST',
+      headers: {
+        // La clave es establecer explícitamente este header
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: datosParaEnviar
+    });
+
+    const data = await response.json();
+    
+    if (response.ok && data.token) {
+      localStorage.setItem('jwt_token', data.token);
+      successMsg.value = 'Inicio de sesión exitoso. Redirigiendo...';
+      
+            // 3. Redirigir a la ruta 'home' después de un pequeño retraso
+      setTimeout(() => {
+        router.push({ name: 'home' }); // O `router.push('/')` si la ruta es la raíz
+      }, 1500); // Retraso de 1.5 segundos para que el usuario vea el mensaje
+
+
+
+    } else {
+      errorMsg.value = data.error || 'Error al iniciar sesión.';
     }
+    
+  } catch (err) {
+    errorMsg.value = 'Error en la conexión con el servidor.';
+    console.error(err);
+  } finally {
+    loading.value = false;
   }
 };
 </script>

@@ -82,9 +82,9 @@ export default {
   },
   mounted() {
       const token = localStorage.getItem('jwt_token');
-      console.log("Token cargado:", token);
+      
 
-      fetch('/api/php/base_login_crud/mydocu/Vista/ajax/ajax_categorias.php', {
+      fetch('/api/api_categorias.php', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -104,7 +104,7 @@ export default {
       this.subcategoriaSeleccionada = '';
       if (this.categoriaSeleccionada === '') return;
 
-      fetch('/api/php/base_login_crud/mydocu/Vista/ajax/ajax_categoriasSub.php', {
+      fetch('/api/api_categoriasSub.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -126,7 +126,7 @@ export default {
       this.sub_subcategoriaSeleccionada = '';
       if (!this.subcategoriaSeleccionada) return;
 
-      fetch('/api/php/base_login_crud/mydocu/Vista/ajax/ajax_categoriasSub_sub.php', {
+      fetch('/api/api_categoriasSub_sub.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'

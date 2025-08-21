@@ -19,7 +19,7 @@ export default {
       const token = localStorage.getItem('jwt_token');
       console.log("Token cargado:", token);
 
-      fetch('/api/php/base_login_crud/mydocu/Vista/ajax/ajax_prueba.php', { 
+      fetch('/api/api_prueba.php', { 
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
