@@ -9,32 +9,26 @@ import PageNotFound from './views/PageNotFound.vue'
 import { isAuthenticated } from '@/utils/auth'
 
 const routes = [
-    // Define la ruta del login como una ruta independiente
     { 
         path: '/login', 
-        name: 'login', // Asignar un nombre a la ruta para una navegación clara
+        name: 'login',
         component: Login, 
         meta: { requiresAuth: false } 
     },
     
-    // Define la ruta principal que carga el MainLayout
     {
         path: '/',
         component: MainLayout,
-        // Asigna un nombre a la ruta raíz para poder redirigir a ella si es necesario
         name: 'main', 
-        // Redirige la ruta raíz (`/`) a la página de inicio
         redirect: '/home', 
-        meta: { requiresAuth: true }, // Las rutas dentro del MainLayout requieren autenticación por defecto
+        meta: { requiresAuth: true },
         children: [
-            // Las rutas anidadas ahora tienen un path relativo (sin `/`)
             { path: 'home', name: 'home', component: Home },
             { path: 'acerca', name: 'acerca', component: Acerca },
             { path: 'usuarios', name: 'usuarios', component: Usuarios }
         ]
     },
     
-    // Ruta para manejar URLs no encontradas (404)
     {
         path: '/:pathMatch(.*)*',
         component: PageNotFound
@@ -46,14 +40,51 @@ const router = createRouter({
     routes
 });
 
+// Función para verificar el token con el backend
+const checkTokenWithBackend = async (token) => {
+    try {
+        const response = await fetch('/api/check-auth.php', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        // Si el token es válido, el servidor responderá con 200 OK
+        return response.ok;
+    } catch (error) {
+        console.error('La verificación de la API falló:', error);
+        return false;
+    }
+};
+
 // Guardián de navegación para la autenticación
-router.beforeEach((to, from, next) => {
-    // Si la ruta requiere autenticación Y el usuario no está autenticado...
-    if (to.meta.requiresAuth && !isAuthenticated()) {
-        // Redirige al usuario a la página de login
-        next({ name: 'login' });
+router.beforeEach(async (to, from, next) => {
+    // Si la ruta requiere autenticación...
+    if (to.meta.requiresAuth) {
+        const token = localStorage.getItem('jwt_token');
+
+        // Paso 1: Verificación del lado del cliente
+        if (!token || !isAuthenticated()) {
+            // No hay token o ha expirado. Redirigir al login.
+            next({ name: 'login' });
+            return;
+        }
+
+        // Paso 2: Verificación con el backend (más segura)
+        const isTokenValid = await checkTokenWithBackend(token);
+
+        if (isTokenValid) {
+            // El token es válido, permitir la navegación
+            next();
+        } else {
+            // El token es inválido o ha sido revocado en el servidor.
+            // Limpiar el token y redirigir al login.
+            localStorage.removeItem('jwt_token');
+            next({ name: 'login' });
+        }
     } else {
-        // De lo contrario, permite la navegación
+        // La ruta no requiere autenticación, permitir la navegación
         next();
     }
 });

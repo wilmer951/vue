@@ -44,7 +44,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { useRouter } from 'vue-router'; // 1. Importar la función useRouter
+import { useRouter } from 'vue-router';
 
 const user = ref('');
 const password = ref('');
@@ -52,7 +52,7 @@ const loading = ref(false);
 const errorMsg = ref('');
 const successMsg = ref('');
 
-const router = useRouter(); // 2. Obtener la instancia del enrutador aquí
+const router = useRouter();
 
 const login = async () => {
   errorMsg.value = '';
@@ -65,35 +65,36 @@ const login = async () => {
     return;
   }
   
-  const datosParaEnviar = new URLSearchParams();
-  datosParaEnviar.append('nameUserLogin', user.value);
-  datosParaEnviar.append('namePasswordLogin', password.value);
+  // Create a JavaScript object with the login data
+  const loginData = {
+    usuario: user.value,
+    password: password.value
+  };
 
   try {
     const response = await fetch('/api/api_login.php', {
       method: 'POST',
       headers: {
-        // La clave es establecer explícitamente este header
-        'Content-Type': 'application/x-www-form-urlencoded'
+        // The key is to set this header to 'application/json'
+        'Content-Type': 'application/json'
       },
-      body: datosParaEnviar
+      // Convert the JavaScript object to a JSON string
+      body: JSON.stringify(loginData)
     });
 
     const data = await response.json();
     
-    if (response.ok && data.token) {
+    if (response.ok && data.estado) {
       localStorage.setItem('jwt_token', data.token);
       successMsg.value = 'Inicio de sesión exitoso. Redirigiendo...';
       
-            // 3. Redirigir a la ruta 'home' después de un pequeño retraso
       setTimeout(() => {
-        router.push({ name: 'home' }); // O `router.push('/')` si la ruta es la raíz
-      }, 1500); // Retraso de 1.5 segundos para que el usuario vea el mensaje
-
-
+        router.push({ name: 'home' });
+      }, 1500);
 
     } else {
-      errorMsg.value = data.error || 'Error al iniciar sesión.';
+      // The API now returns a 'mensaje' key for errors
+      errorMsg.value = data.mensaje || 'Error al iniciar sesión.';
     }
     
   } catch (err) {
